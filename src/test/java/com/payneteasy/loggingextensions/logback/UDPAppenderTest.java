@@ -16,6 +16,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * @author rpuch
+ */
 public class UDPAppenderTest {
     private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(UDPAppenderTest.class);
     private static final StatusListener STATUS_LISTENER = new StatusListener() {

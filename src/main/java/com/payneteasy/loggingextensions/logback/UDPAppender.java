@@ -12,6 +12,27 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 /**
+ * Appender for logback which sends logging data using UDP protocol.
+ * For each log message, corresponding ILoggingEvent is serialized
+ * using standard Java serialization mechanism, and then it is
+ * written in a single datagram.
+ * <p>
+ * This class supports the following parameters:
+ * <ul>
+ *     <li><b>remoteHost</b> - name of the host to which datagrams
+ *     will be sent</li>
+ *     <li><b>port</b> - port number of the remote host to which datagrams
+ *     will be sent</li>
+ * </ul>
+ * <p>
+ * Example configuration follows:
+ * <pre>{@code
+ * <appender name="udp" class="com.payneteasy.loggingextensions.logback.UDPAppender">
+ *     <remoteHost>localhost</remoteHost>
+ *     <port>3333</port>
+ * </appender>
+ * }</pre>
+ *
  * @author rpuch
  */
 public class UDPAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
@@ -56,6 +77,7 @@ public class UDPAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         } catch (IOException e) {
             addWarn("Cannot close channel", e);
         }
+        channel = null;
     }
 
     @Override
