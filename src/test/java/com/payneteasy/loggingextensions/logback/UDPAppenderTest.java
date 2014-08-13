@@ -93,7 +93,7 @@ public class UDPAppenderTest {
 
         try {
             appender.doAppend(new LoggingEvent("FQCN", LOGGER, Level.DEBUG,
-                    "Test message", generateThrowable(100), null));
+                    "Test message", generateThrowable(50), null));
 
             ILoggingEvent acceptedEvent = server.getResultFuture().get(5, TimeUnit.SECONDS);
             Assert.assertNotNull("Did not accept any datagram", acceptedEvent);
