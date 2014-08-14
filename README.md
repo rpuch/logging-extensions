@@ -1,4 +1,8 @@
 logging-extensions
 ==================
 
-Extensions to logging frameworks (like Appenders and so on)
+Extensions for logging frameworks. Currently contains appenders
+for log4j and logback: these are UDPLog4jAppender and
+UDPLogbackAppender.
+
+See corresponding classes javadoc for documentation.
