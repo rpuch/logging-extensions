@@ -24,7 +24,7 @@ import java.nio.channels.DatagramChannel;
  *     will be sent</li>
  * </ul>
  * <p>
- * Example configuration follows:
+ * Example XML configuration follows:
  * <pre>{@code
  * <appender name="udp" class="com.payneteasy.loggingextensions.log4j.UDPLog4jAppender">
  *     <param name="remoteHost" value="localhost"/>
