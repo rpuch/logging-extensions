@@ -1,6 +1,4 @@
-package com.payneteasy.loggingextensions.logback;
-
-import ch.qos.logback.classic.spi.ILoggingEvent;
+package com.payneteasy.loggingextensions.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -20,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * @author rpuch
  */
-public class UDPLogbackAcceptor {
+abstract class AbstractUDPLogAcceptor<E> {
     private static final int MAX_DATAGRAM_SIZE = 64 * 1024;
 
     private final int serverPort;
@@ -34,10 +32,10 @@ public class UDPLogbackAcceptor {
     private final ByteBuffer buffer = ByteBuffer.wrap(bufferArray);
 
     private final CountDownLatch acceptedLatch = new CountDownLatch(1);
-    private volatile ILoggingEvent acceptedEvent;
-    private final Future<ILoggingEvent> resultFuture = new ResultFuture();
+    private volatile E acceptedEvent;
+    private final Future<E> resultFuture = new ResultFuture();
 
-    public UDPLogbackAcceptor(int serverPort) {
+    protected AbstractUDPLogAcceptor(int serverPort) {
         this.serverPort = serverPort;
     }
 
@@ -69,7 +67,8 @@ public class UDPLogbackAcceptor {
                 buffer.flip();
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bufferArray, buffer.position(), buffer.limit()));
                 try {
-                    acceptedEvent = (ILoggingEvent) ois.readObject();
+                    @SuppressWarnings("unchecked") E event = (E) ois.readObject();
+                    acceptedEvent = event;
                     acceptedLatch.countDown();
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
@@ -107,11 +106,11 @@ public class UDPLogbackAcceptor {
         }
     }
 
-    public Future<ILoggingEvent> getResultFuture() {
+    public Future<E> getResultFuture() {
         return resultFuture;
     }
 
-    private class ResultFuture implements Future<ILoggingEvent> {
+    private class ResultFuture implements Future<E> {
         public boolean cancel(boolean mayInterruptIfRunning) {
             throw new UnsupportedOperationException();
         }
@@ -124,12 +123,12 @@ public class UDPLogbackAcceptor {
             return acceptedLatch.getCount() == 0;
         }
 
-        public ILoggingEvent get() throws InterruptedException, ExecutionException {
+        public E get() throws InterruptedException, ExecutionException {
             acceptedLatch.await();
             return acceptedEvent;
         }
 
-        public ILoggingEvent get(long timeout,
+        public E get(long timeout,
                 TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             acceptedLatch.await(timeout, unit);
             return acceptedEvent;

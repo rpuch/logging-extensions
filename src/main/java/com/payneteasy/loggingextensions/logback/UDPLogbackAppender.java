@@ -3,10 +3,9 @@ package com.payneteasy.loggingextensions.logback;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEventVO;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import com.payneteasy.loggingextensions.utils.SerializationUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -15,7 +14,7 @@ import java.nio.channels.DatagramChannel;
  * Appender for logback which sends logging data using UDP protocol.
  * For each log message, corresponding ILoggingEvent is serialized
  * using standard Java serialization mechanism, and then it is
- * written in a single datagram.
+ * transmitted in a single datagram.
  * <p>
  * This class supports the following parameters:
  * <ul>
@@ -27,7 +26,7 @@ import java.nio.channels.DatagramChannel;
  * <p>
  * Example configuration follows:
  * <pre>{@code
- * <appender name="udp" class="com.payneteasy.loggingextensions.logback.UDPAppender">
+ * <appender name="udp" class="com.payneteasy.loggingextensions.logback.UDPLogbackAppender">
  *     <remoteHost>localhost</remoteHost>
  *     <port>3333</port>
  * </appender>
@@ -35,7 +34,7 @@ import java.nio.channels.DatagramChannel;
  *
  * @author rpuch
  */
-public class UDPAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
+public class UDPLogbackAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private String remoteHost;
     private int port = -1;
 
@@ -91,11 +90,7 @@ public class UDPAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     }
 
     private byte[] serializeObjectToBytes(ILoggingEvent eventObject) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(eventObject);
-        oos.close();
-        return baos.toByteArray();
+        return SerializationUtils.serializeObjectToBytes(eventObject);
     }
 
 }

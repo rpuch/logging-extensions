@@ -6,6 +6,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
+import com.payneteasy.loggingextensions.utils.UDPLogbackAcceptor;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -19,8 +20,8 @@ import java.util.concurrent.TimeoutException;
 /**
  * @author rpuch
  */
-public class UDPAppenderTest {
-    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(UDPAppenderTest.class);
+public class UDPLogbackAppenderTest {
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(UDPLogbackAppenderTest.class);
     private static final StatusListener STATUS_LISTENER = new StatusListener() {
         public void addStatusEvent(Status status) {
             throw new AssertionError(status.getMessage(), status.getThrowable());
@@ -39,7 +40,7 @@ public class UDPAppenderTest {
 
     @Test
     public void testNoHostSpecified() {
-        UDPAppender appender = new UDPAppender();
+        UDPLogbackAppender appender = new UDPLogbackAppender();
         appender.setPort(4000);
         try {
             appender.start();
@@ -51,7 +52,7 @@ public class UDPAppenderTest {
 
     @Test
     public void testNoPortSpecified() {
-        UDPAppender appender = new UDPAppender();
+        UDPLogbackAppender appender = new UDPLogbackAppender();
         appender.setRemoteHost("localhost");
         try {
             appender.start();
@@ -63,7 +64,7 @@ public class UDPAppenderTest {
 
     @Test
     public void testStartSetsIsStartedFlag() {
-        UDPAppender appender = new UDPAppender();
+        UDPLogbackAppender appender = new UDPLogbackAppender();
         appender.setRemoteHost("localhost");
         appender.setPort(3000);
         appender.start();
@@ -72,7 +73,7 @@ public class UDPAppenderTest {
 
     @Test
     public void testStopClearsIsStartedFlag() {
-        UDPAppender appender = new UDPAppender();
+        UDPLogbackAppender appender = new UDPLogbackAppender();
         appender.setRemoteHost("localhost");
         appender.setPort(3000);
         appender.start();
@@ -85,7 +86,7 @@ public class UDPAppenderTest {
         UDPLogbackAcceptor server = new UDPLogbackAcceptor(3333);
         server.start();
 
-        UDPAppender appender = new UDPAppender();
+        UDPLogbackAppender appender = new UDPLogbackAppender();
         appender.setContext(LOGGER.getLoggerContext());
         appender.setRemoteHost("localhost");
         appender.setPort(3333);
