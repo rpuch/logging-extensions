@@ -22,6 +22,8 @@ import java.nio.channels.DatagramChannel;
  *     will be sent</li>
  *     <li><b>port</b> - port number of the remote host to which datagrams
  *     will be sent</li>
+ *     <li><b>sendLoggerNameInMessage</b> - if true, then loggerName is
+ *     sent in message; loggerName field is cleared. Default is false.</li>
  * </ul>
  * <p>
  * Example configuration follows:
@@ -37,6 +39,7 @@ import java.nio.channels.DatagramChannel;
 public class UDPLogbackAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private String remoteHost;
     private int port = -1;
+    private boolean sendLoggerNameInMessage = false;
 
     private DatagramChannel channel;
 
@@ -46,6 +49,10 @@ public class UDPLogbackAppender extends UnsynchronizedAppenderBase<ILoggingEvent
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setSendLoggerNameInMessage(boolean sendLoggerNameInMessage) {
+        this.sendLoggerNameInMessage = sendLoggerNameInMessage;
     }
 
     @Override
@@ -82,11 +89,18 @@ public class UDPLogbackAppender extends UnsynchronizedAppenderBase<ILoggingEvent
     @Override
     protected void append(ILoggingEvent eventObject) {
         try {
-            byte[] bytes = serializeObjectToBytes(LoggingEventVO.build(eventObject));
+            byte[] bytes = serializeObjectToBytes(buildLoggingEventVO(eventObject));
             channel.write(ByteBuffer.wrap(bytes));
         } catch (IOException e) {
             addError("Cannot send a message", e);
         }
+    }
+
+    private LoggingEventVO buildLoggingEventVO(ILoggingEvent originalEventObject) {
+        final ILoggingEvent adjustedEvent = sendLoggerNameInMessage
+                ? new LoggingEventWithLoggerNameInMessage(originalEventObject)
+                : originalEventObject;
+        return LoggingEventVO.build(adjustedEvent);
     }
 
     private byte[] serializeObjectToBytes(ILoggingEvent eventObject) throws IOException {

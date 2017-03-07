@@ -6,6 +6,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
+import com.payneteasy.loggingextensions.Throwables;
 import com.payneteasy.loggingextensions.utils.UDPLogbackAcceptor;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -16,6 +17,10 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author rpuch
@@ -46,7 +51,7 @@ public class UDPLogbackAppenderTest {
             appender.start();
             Assert.fail("start() should fail as remoteHost is not configured");
         } catch (IllegalStateException e) {
-            Assert.assertEquals("remoteHost not configured", e.getMessage());
+            assertEquals("remoteHost not configured", e.getMessage());
         }
     }
 
@@ -58,7 +63,7 @@ public class UDPLogbackAppenderTest {
             appender.start();
             Assert.fail("start() should fail as remotePort is not configured");
         } catch (IllegalStateException e) {
-            Assert.assertEquals("port not configured", e.getMessage());
+            assertEquals("port not configured", e.getMessage());
         }
     }
 
@@ -94,28 +99,49 @@ public class UDPLogbackAppenderTest {
 
         try {
             appender.doAppend(new LoggingEvent("FQCN", LOGGER, Level.DEBUG,
-                    "Test message", generateThrowable(50), null));
+                    "Test message", Throwables.generateThrowable(50), null));
 
             ILoggingEvent acceptedEvent = server.getResultFuture().get(5, TimeUnit.SECONDS);
-            Assert.assertNotNull("Did not accept any datagram", acceptedEvent);
-            Assert.assertEquals("Test message", acceptedEvent.getMessage());
-            Assert.assertEquals(LOGGER.getName(), acceptedEvent.getLoggerName());
-            Assert.assertEquals(Level.DEBUG, acceptedEvent.getLevel());
-            Assert.assertNotNull(acceptedEvent.getThrowableProxy());
-            Assert.assertEquals("Some exception", acceptedEvent.getThrowableProxy().getMessage());
+            assertNotNull("Did not accept any datagram", acceptedEvent);
+            assertEquals("Test message", acceptedEvent.getMessage());
+            assertEquals("Test message", acceptedEvent.getFormattedMessage());
+            assertEquals(LOGGER.getName(), acceptedEvent.getLoggerName());
+            assertEquals(Level.DEBUG, acceptedEvent.getLevel());
+            assertNotNull(acceptedEvent.getThrowableProxy());
+            assertEquals("Some exception", acceptedEvent.getThrowableProxy().getMessage());
         } finally {
             appender.stop();
             server.stop();
         }
     }
 
-    private Throwable generateThrowable(int level) {
-        if (level <= 0) {
-            return new RuntimeException("Inner exception");
-        } else if (level % 5 == 0) {
-            return new RuntimeException("Some exception", generateThrowable(level - 1));
-        } else {
-            return generateThrowable(level - 1);
+    @Test
+    public void testSendWithLoggerNameInMessage() throws InterruptedException, TimeoutException, ExecutionException {
+        UDPLogbackAcceptor server = new UDPLogbackAcceptor(3333);
+        server.start();
+
+        UDPLogbackAppender appender = new UDPLogbackAppender();
+        appender.setContext(LOGGER.getLoggerContext());
+        appender.setRemoteHost("localhost");
+        appender.setPort(3333);
+        appender.setSendLoggerNameInMessage(true);
+        appender.start();
+
+        try {
+            appender.doAppend(new LoggingEvent("FQCN", LOGGER, Level.DEBUG,
+                    "Test message", Throwables.generateThrowable(50), null));
+
+            ILoggingEvent acceptedEvent = server.getResultFuture().get(5, TimeUnit.SECONDS);
+            assertNotNull("Did not accept any datagram", acceptedEvent);
+            assertEquals("com.payneteasy.loggingextensions.logback.UDPLogbackAppenderTest:\nTest message", acceptedEvent.getMessage());
+            assertEquals("com.payneteasy.loggingextensions.logback.UDPLogbackAppenderTest:\nTest message", acceptedEvent.getFormattedMessage());
+            assertNull(null, acceptedEvent.getLoggerName());
+            assertEquals(Level.DEBUG, acceptedEvent.getLevel());
+            assertNotNull(acceptedEvent.getThrowableProxy());
+            assertEquals("Some exception", acceptedEvent.getThrowableProxy().getMessage());
+        } finally {
+            appender.stop();
+            server.stop();
         }
     }
 }

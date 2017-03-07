@@ -1,5 +1,6 @@
 package com.payneteasy.loggingextensions.log4j;
 
+import com.payneteasy.loggingextensions.Throwables;
 import com.payneteasy.loggingextensions.utils.UDPLog4jAcceptor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -53,7 +54,7 @@ public class UDPLog4jAppenderTest {
 
         try {
             appender.doAppend(new LoggingEvent("FQCN", LOGGER, Level.DEBUG,
-                    "Test message", generateThrowable(50)));
+                    "Test message", Throwables.generateThrowable(50)));
 
             LoggingEvent acceptedEvent = server.getResultFuture().get(5, TimeUnit.SECONDS);
             Assert.assertNotNull("Did not accept any datagram", acceptedEvent);
@@ -68,16 +69,6 @@ public class UDPLog4jAppenderTest {
         } finally {
             appender.close();
             server.stop();
-        }
-    }
-
-    private Throwable generateThrowable(int level) {
-        if (level <= 0) {
-            return new RuntimeException("Inner exception");
-        } else if (level % 5 == 0) {
-            return new RuntimeException("Some exception", generateThrowable(level - 1));
-        } else {
-            return generateThrowable(level - 1);
         }
     }
 }
